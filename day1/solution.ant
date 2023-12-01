@@ -1,0 +1,93 @@
+let input = std.read_file("input.txt");
+part_one(input);
+part_two(input);
+
+const std = import "std:prelude";
+
+const part_one = fn(input: std.Buf(u8)) -> () {
+    let first_digit = 42;
+    let last_digit = 0;
+
+    let sum = 0;
+    for c in input {
+        if c >= '0' && c <= '9' {
+            if first_digit == 42 {
+                first_digit = c - '0';
+            }
+            last_digit = c - '0';
+        }
+
+        if c == '\n' && first_digit != 42 {
+            sum += (first_digit * 10 + last_digit) as s64;
+            first_digit = 42;
+            last_digit = 0;
+        }
+    }
+
+    if first_digit != 42 {
+        sum += (first_digit * 10 + last_digit) as s64;
+    }
+
+    std.printf("Part one answer: %\n", (sum,));
+}
+
+const part_two = fn(input: std.Buf(u8)) -> () {
+    let first_digit = 42;
+    let last_digit = 0;
+    let sum = 0;
+
+    let update_digit = macro(digit) {
+        if first_digit == 42 {
+            first_digit = digit;
+        }
+        last_digit = digit;
+    }
+
+    let incr_sum = macro() {
+        sum += (first_digit * 10 + last_digit) as s64;
+        first_digit = 42;
+        last_digit = 0;
+    }
+
+    for (i, c) in std.enumerate(input) {
+        if c >= '0' && c <= '9' {
+            update_digit(c - '0');
+        } else if c == 'o' {
+            // Zero does not seem to be a digit from the instruction
+            // if ends_in_string(input, "zero", i) update_digit(0);
+            if ends_in_string(input, "two", i)   update_digit(2);
+        } else if c == 'e' {
+            if ends_in_string(input, "one", i)   update_digit(1);
+            if ends_in_string(input, "three", i) update_digit(3);
+            if ends_in_string(input, "five", i)  update_digit(5);
+            if ends_in_string(input, "nine", i)  update_digit(9);
+        } else if c == 'r' {
+            if ends_in_string(input, "four", i)  update_digit(4);
+        } else if c == 'x' {
+            if ends_in_string(input, "six", i)   update_digit(6);
+        } else if c == 'n' {
+            if ends_in_string(input, "seven", i) update_digit(7);
+        } else if c == 't' {
+            if ends_in_string(input, "eight", i) update_digit(8);
+        }
+
+        if c == '\n' incr_sum();
+    }
+
+    if first_digit != 0 incr_sum();
+
+    std.printf("Part two answer: %\n", (sum,));
+}
+
+const ends_in_string = fn(input: std.Buf(u8), match: std.Buf(u8), idx: s64) -> bool {=func
+    if idx + 1 < match.len break =func .false;
+
+    let i = 0;
+    let start = idx + 1 - match.len;
+    while i < match.len {
+        if *(input.ptr + (start + i)) != *(match.ptr + i) break =func .false;
+        i += 1;
+    }
+
+    .true
+}
