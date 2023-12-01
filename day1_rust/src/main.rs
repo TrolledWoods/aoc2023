@@ -1,3 +1,31 @@
+fn part_1(input: &str) -> i64 {
+    let mut f = 0_u8;
+    let mut l = 0_u8;
+    let mut sum = 0;
+
+    for c in input.bytes() {
+        match c {
+            b'1'..=b'9' => {
+                if f == 0 { f = c - b'0'; }
+                l = c - b'0';
+            }
+            b'\n' => {
+                if f != 0 {
+                    sum += (f * 10 + l) as i64;
+                    f = 0;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if f != 0 {
+        sum += (f * 10 + l) as i64;
+    }
+
+    sum
+}
+
 #[derive(Clone, Copy)]
 #[repr(u8)]
 enum StateMachine {
@@ -178,13 +206,25 @@ fn main() {
     let mut total_duration = 0.0;
     for _ in 0..100 {
         let start_time = std::time::Instant::now();
+        let answer = part_1(&input);
+        let duration = start_time.elapsed();
+
+        println!("Part 1 answer: {}", answer);
+        println!("Took {:.6} s", duration.as_secs_f64());
+        total_duration += duration.as_secs_f64();
+    }
+
+    let mut total_duration2 = 0.0;
+    for _ in 0..100 {
+        let start_time = std::time::Instant::now();
         let answer = part_2(&input);
         let duration = start_time.elapsed();
 
         println!("Part 2 answer: {}", answer);
         println!("Took {:.6} s", duration.as_secs_f64());
-        total_duration += duration.as_secs_f64();
+        total_duration2 += duration.as_secs_f64();
     }
 
-    println!("Average: {:.6} s", total_duration / 100.0);
+    println!("Part 1 Average: {:.6} s", total_duration / 100.0);
+    println!("Part 2 Average: {:.6} s", total_duration2 / 100.0);
 }
