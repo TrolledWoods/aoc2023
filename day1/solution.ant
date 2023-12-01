@@ -74,7 +74,7 @@ const part_two = fn(input: std.Buf(u8)) -> () {
         if c == '\n' incr_sum();
     }
 
-    if first_digit != 0 incr_sum();
+    if first_digit != 42 incr_sum();
 
     std.printf("Part two answer: %\n", (sum,));
 }
