@@ -1,0 +1,148 @@
+const std = import "std:prelude";
+
+let input = std.read_file("input.txt");
+part_2(input);
+
+const part_1 = fn(input: std.Buf(u8)) -> () {
+    let stream = std.Stream.new(&input);
+    stream.spaces();
+
+    let sum = 0;
+    let game_id = 0 - 1;
+    let game_is_possible = bool.true;
+
+    let r = 0;
+    let g = 0;
+    let b = 0;
+
+    while .not(stream.done()) {
+        while stream.next() != 0 {
+            let digit = stream.next();
+            if std.is_digit(digit) {
+                let num = stream.parse_int();
+                stream.spaces();
+
+                if game_id == 0 - 1 {
+                    game_id = num;
+                } else if stream.next() == 'r' {
+                    r = num;
+                    if r > 12 {
+                        game_is_possible = .false;
+                    }
+                } else if stream.next() == 'g' {
+                    g = num;
+                    if g > 13 {
+                        game_is_possible = .false;
+                    }
+                } else if stream.next() == 'b' {
+                    b = num;
+                    if b > 14 {
+                        game_is_possible = .false;
+                    }
+                } else {
+                    assert .false;
+                }
+            } else if digit == '\n' {
+                if game_is_possible && game_id != 0 - 1 {
+                    sum += game_id;
+                }
+                game_id = 0 - 1;
+                r = 0;
+                g = 0;
+                b = 0;
+                game_is_possible = .true;
+            } else if digit == ';' {
+                r = 0;
+                g = 0;
+                b = 0;
+            }
+
+            stream.advance();
+        }
+    }
+
+    if game_is_possible && game_id != 0 - 1 {
+        sum += game_id;
+    }
+
+    std.printf("Part 1 answer: %\n", (sum,));
+}
+
+const part_2 = fn(input: std.Buf(u8)) -> () {
+    let stream = std.Stream.new(&input);
+    stream.spaces();
+
+    let sum = 0;
+    let game_id = 0 - 1;
+
+    let r = 0;
+    let g = 0;
+    let b = 0;
+
+    let min_r = 0;
+    let min_g = 0;
+    let min_b = 0;
+
+    while .not(stream.done()) {
+        while stream.next() != 0 {
+            let digit = stream.next();
+            if std.is_digit(digit) {
+                let num = stream.parse_int();
+                stream.spaces();
+
+                if game_id == 0 - 1 {
+                    game_id = num;
+                } else if stream.next() == 'r' {
+                    r += num;
+                    if r > min_r {
+                        min_r = r;
+                    }
+                } else if stream.next() == 'g' {
+                    g += num;
+                    if g > min_g {
+                        min_g = g;
+                    }
+                } else if stream.next() == 'b' {
+                    b += num;
+                    if b > min_b {
+                        min_b = b;
+                    }
+                } else {
+                    assert .false;
+                }
+            } else if digit == '\n' {
+                if game_id != 0 - 1 {
+                    sum += min_r * min_b * min_g;
+                }
+                game_id = 0 - 1;
+                r = 0;
+                g = 0;
+                b = 0;
+                min_r = 0;
+                min_g = 0;
+                min_b = 0;
+            } else if digit == ';' {
+                r = 0;
+                g = 0;
+                b = 0;
+            }
+
+            stream.advance();
+        }
+    }
+
+    if game_id != 0 - 1 {
+        sum += min_r * min_g * min_b;
+    }
+
+    std.printf("Part 2 answer: %\n", (sum,));
+}
+
+const skip = fn(input: &std.Buf(u8), count: s64) -> () {
+    if input.len < count {
+        input.ptr += count;
+        input.len -= count;
+    } else {
+        input.len = 0;
+    }
+}
