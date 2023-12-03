@@ -1,30 +1,34 @@
-use std::collections::{hash_map::Entry, HashMap};
+use std::collections::hash_map::Entry;
+use ahash::AHashMap;
 
 pub fn part1(input: &str) -> i64 {
-    let lines: Vec<_> = input.lines().map(|v| v.trim().as_bytes()).collect();
+    let stride = input.find('\n').unwrap_or(input.len() * 2) + 1;
 
+    let mut number = 0;
+    let mut number_start = None;
     let mut sum = 0;
-    for (line_i, line) in lines.iter().enumerate() {
-        let mut number = 0;
-        let mut number_start = None;
-        for (c_i, c) in line.iter().copied().chain(Some(b'.')).enumerate() {
-            if c >= b'0' && c <= b'9' {
+    for (byte_i, c) in input.bytes().chain(Some(b'\n')).enumerate() {
+        match c {
+            b'0'..=b'9' => {
                 number = number * 10 + (c - b'0') as i64;
-                number_start.get_or_insert(c_i);
-            } else if let Some(number_start) = number_start.take() {
-                let mut valid_number = false;
-                for s in &lines[line_i.saturating_sub(1)..lines.len().min(line_i + 2)] {
-                    for sub_c_i in number_start.saturating_sub(1)..c_i + 1 {
-                        if s.get(sub_c_i).is_some_and(|v| !(*v == b'.' || (*v >= b'0' &&  *v <= b'9'))) {
-                            valid_number = true;
-                        }
-                    }
-                }
+                number_start.get_or_insert(byte_i);
+            }
+            _ => {
+                if let Some(number_start) = number_start.take() {
+                    let number_len = byte_i - number_start;
+                    let valid_number = 
+                        [number_start.checked_sub(stride), Some(number_start), Some(number_start + stride)]
+                        .into_iter()
+                        .flatten()
+                        .flat_map(|idx| (idx.saturating_sub(1) .. idx + number_len + 1))
+                        .map(|i| input.as_bytes().get(i).copied().unwrap_or(b' '))
+                        .any(|v| !(v == b'.' || v.is_ascii_whitespace() || (v >= b'0' &&  v <= b'9')));
 
-                if valid_number {
-                    sum += number;
+                    if valid_number {
+                        sum += number;
+                    }
+                    number = 0;
                 }
-                number = 0;
             }
         }
     }
@@ -33,51 +37,56 @@ pub fn part1(input: &str) -> i64 {
 }
 
 pub fn part2(input: &str) -> i64 {
-    let lines: Vec<_> = input.lines().map(|v| v.trim().as_bytes()).collect();
-    let mut gears = HashMap::new();
+    let mut gears = AHashMap::new();
     enum Gear {
         One(i64),
         Two(i64),
         Three,
     }
 
+    let stride = input.find('\n').unwrap_or(input.len() * 2) + 1;
+
+    let mut number = 0;
+    let mut number_start = None;
     let mut sum = 0;
-    for (line_i, line) in lines.iter().enumerate() {
-        let mut number = 0;
-        let mut number_start = None;
-        for (c_i, c) in line.iter().copied().chain(Some(b'.')).enumerate() {
-            if c >= b'0' && c <= b'9' {
+    for (byte_i, c) in input.bytes().chain(Some(b'\n')).enumerate() {
+        match c {
+            b'0'..=b'9' => {
                 number = number * 10 + (c - b'0') as i64;
-                number_start.get_or_insert(c_i);
-            } else if let Some(number_start) = number_start.take() {
-                for sub_line_i in line_i.saturating_sub(1)..line_i + 2 {
-                    if let Some(s) = lines.get(sub_line_i) {
-                        for sub_c_i in number_start.saturating_sub(1)..c_i + 1 {
-                            if s.get(sub_c_i).is_some_and(|v| *v == b'*') {
-                                match gears.entry((s, sub_c_i)) {
-                                    Entry::Vacant(entry) => {
-                                        entry.insert(Gear::One(number));
+                number_start.get_or_insert(byte_i);
+            }
+            _ => {
+                if let Some(number_start) = number_start.take() {
+                    let number_len = byte_i - number_start;
+                    let stars = [number_start.checked_sub(stride), Some(number_start), Some(number_start + stride)]
+                        .into_iter()
+                        .flatten()
+                        .flat_map(|idx| (idx.saturating_sub(1) .. idx + number_len + 1))
+                        .filter(|&i| input.as_bytes().get(i) == Some(&b'*'));
+
+                    for star in stars {
+                        match gears.entry(star) {
+                            Entry::Vacant(entry) => {
+                                entry.insert(Gear::One(number));
+                            }
+                            Entry::Occupied(mut entry) => {
+                                match *entry.get() {
+                                    Gear::One(prev) => {
+                                        sum += prev * number;
+                                        *entry.get_mut() = Gear::Two(prev * number);
                                     }
-                                    Entry::Occupied(mut entry) => {
-                                        match *entry.get() {
-                                            Gear::One(prev) => {
-                                                sum += prev * number;
-                                                *entry.get_mut() = Gear::Two(prev * number);
-                                            }
-                                            Gear::Two(v) => {
-                                                sum -= v;
-                                                *entry.get_mut() = Gear::Three;
-                                            }
-                                            Gear::Three => {}
-                                        }
+                                    Gear::Two(v) => {
+                                        sum -= v;
+                                        *entry.get_mut() = Gear::Three;
                                     }
+                                    Gear::Three => {}
                                 }
                             }
                         }
                     }
-                }
 
-                number = 0;
+                    number = 0;
+                }
             }
         }
     }

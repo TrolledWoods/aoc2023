@@ -15,3 +15,6 @@ harness = false
 [[bench]]
 name = "day2"
 harness = false
+
+[dependencies]
+ahash = "0.8.6"
