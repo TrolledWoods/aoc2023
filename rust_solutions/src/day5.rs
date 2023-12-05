@@ -1,3 +1,51 @@
+use rayon::prelude::*;
+
+pub fn part2_brute(input: &str) -> u64 {
+    let mut input_lines = input.lines().map(|v| v.trim());
+
+    let mut initial_seeds = input_lines
+        .by_ref()
+        .find_map(|v| v.strip_prefix("seeds: "))
+        .unwrap()
+        .split_whitespace()
+        .filter_map(|v| v.parse::<u64>().ok())
+        .array_chunks()
+        .collect::<Vec<_>>();
+
+    let mut maps = Vec::new();
+    // I cheat and assume the maps are in order :)
+    while input_lines.by_ref().any(|v| v.contains("map")) {
+        let mut ranges = Vec::new();
+        for line in input_lines.by_ref().take_while(|v| !v.is_empty()) {
+            let mut parts = line.split_whitespace().map(|v| v.parse::<u64>().unwrap());
+            let target = parts.next().unwrap();
+            let source = parts.next().unwrap();
+            let len = parts.next().unwrap();
+            ranges.push((target, source, len));
+        }
+        maps.extend(ranges.iter().zip((0..ranges.len()).rev()).map(|(&range, i)| (i, range)));
+    }
+
+    initial_seeds
+        .par_iter()
+        .flat_map(|&[a, b]| a..a+b)
+        .map(|mut seed| {
+            let mut i = 0;
+            while i < maps.len() {
+                let (offset, (target, start, len)) = maps[i];
+                if seed >= start && seed < start + len {
+                    seed = seed - start + target;
+                    i += offset;
+                }
+                i += 1;
+            }
+
+            seed
+        })
+        .min()
+        .unwrap()
+}
+
 pub fn part1(input: &str) -> u64 {
     let mut input_lines = input.lines().map(|v| v.trim());
 

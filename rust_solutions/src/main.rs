@@ -39,4 +39,8 @@ humidity-to-location map:
     println!("TEST Part 2: {}", rust_solutions::day5::part2(TEST));
     println!("Part 1: {}", rust_solutions::day5::part1(&input));
     println!("Part 2: {}", rust_solutions::day5::part2(&input));
+
+    let timer = std::time::Instant::now();
+    println!("Brute: {}", rust_solutions::day5::part2_brute(&input));
+    println!("Brute method took {:.6}s", timer.elapsed().as_secs_f64());
 }
