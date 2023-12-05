@@ -1,7 +1,8 @@
 const std = import "std:prelude";
 
 let input = std.read_file("input.txt");
-part_2(input);
+assert part_1(input) == 2563;
+assert part_2(input) == 70768;
 
 const part_1 = fn(input: std.Buf(u8)) -> () {
     let stream = std.Stream.new(&input);

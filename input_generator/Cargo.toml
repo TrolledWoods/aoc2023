@@ -1,13 +1,10 @@
 [package]
-name = "day2_rust"
+name = "input_generator"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-criterion = { version = "0.5.1", features = ["html_reports"] }
-
-[[bench]]
-name = "benches"
-harness = false
+clap = { version = "4.4.10", features = ["derive"] }
+rand = { version = "0.8.5", features = ["small_rng"] }

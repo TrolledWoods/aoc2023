@@ -1,3 +1,5 @@
+#![feature(array_windows)]
+
 fn part_1(input: &str) -> i64 {
     let mut f = 0_u8;
     let mut l = 0_u8;
@@ -200,31 +202,81 @@ fn part_2_naiive(input: &str) -> i64 {
     sum
 }
 
+fn part_2_less_naiive(input: &str) -> i64 {
+    let mut f = true;
+    let mut l = 0_u8;
+    let mut sum = 0;
+
+    #[inline(always)]
+    fn add_digit(sum: &mut i64, f: &mut bool, l: &mut u8, digit: u8) {
+        if *f {
+            *sum += (digit * 10) as i64;
+            *f = false;
+        }
+        *l = digit;
+    }
+
+    for sect in input.as_bytes().array_windows::<5>() {
+        match sect {
+            [b'1', ..] | [b'o', b'n', b'e', _   , _   ] => add_digit(&mut sum, &mut f, &mut l, 1),
+            [b'2', ..] | [b't', b'w', b'o', _   , _   ] => add_digit(&mut sum, &mut f, &mut l, 2),
+            [b'3', ..] | [b't', b'h', b'r', b'e', b'e'] => add_digit(&mut sum, &mut f, &mut l, 3),
+            [b'4', ..] | [b'f', b'o', b'u', b'r', _   ] => add_digit(&mut sum, &mut f, &mut l, 4),
+            [b'5', ..] | [b'f', b'i', b'v', b'e', _   ] => add_digit(&mut sum, &mut f, &mut l, 5),
+            [b'6', ..] | [b's', b'i', b'x', _   , _   ] => add_digit(&mut sum, &mut f, &mut l, 6),
+            [b'7', ..] | [b's', b'e', b'v', b'e', b'n'] => add_digit(&mut sum, &mut f, &mut l, 7),
+            [b'8', ..] | [b'e', b'i', b'g', b'h', b't'] => add_digit(&mut sum, &mut f, &mut l, 8),
+            [b'9', ..] | [b'n', b'i', b'n', b'e', _   ] => add_digit(&mut sum, &mut f, &mut l, 9),
+            [b'\n', ..] => {
+                sum += l as i64;
+                f = true;
+                l = 0;
+            }
+            _ => {}
+        }
+    }
+
+    let remainder = &input.as_bytes()[input.len().saturating_sub(4)..];
+    for i in 0..remainder.len() {
+        let sect = &remainder[i..];
+        match sect {
+            [b'1', ..] | [b'o', b'n', b'e', ..] => add_digit(&mut sum, &mut f, &mut l, 1),
+            [b'2', ..] | [b't', b'w', b'o', ..] => add_digit(&mut sum, &mut f, &mut l, 2),
+            [b'3', ..] | [b't', b'h', b'r', b'e', b'e'] => add_digit(&mut sum, &mut f, &mut l, 3),
+            [b'4', ..] | [b'f', b'o', b'u', b'r', ..] => add_digit(&mut sum, &mut f, &mut l, 4),
+            [b'5', ..] | [b'f', b'i', b'v', b'e', ..] => add_digit(&mut sum, &mut f, &mut l, 5),
+            [b'6', ..] | [b's', b'i', b'x', ..] => add_digit(&mut sum, &mut f, &mut l, 6),
+            [b'7', ..] | [b's', b'e', b'v', b'e', b'n'] => add_digit(&mut sum, &mut f, &mut l, 7),
+            [b'8', ..] | [b'e', b'i', b'g', b'h', b't'] => add_digit(&mut sum, &mut f, &mut l, 8),
+            [b'9', ..] | [b'n', b'i', b'n', b'e', ..] => add_digit(&mut sum, &mut f, &mut l, 9),
+            [b'\n', ..] => {
+                sum += l as i64;
+                f = true;
+                l = 0;
+            }
+            _ => {}
+        }
+    }
+
+    sum += l as i64;
+
+    sum
+}
+
 fn main() {
-    let input = std::fs::read_to_string("input.txt").unwrap();
+    let input = std::fs::read_to_string("large_input.txt").unwrap();
 
-    let mut total_duration = 0.0;
-    for _ in 0..100 {
-        let start_time = std::time::Instant::now();
-        let answer = part_1(&input);
-        let duration = start_time.elapsed();
+    let start_time = std::time::Instant::now();
+    let answer = part_1(&input);
+    let duration = start_time.elapsed();
 
-        println!("Part 1 answer: {}", answer);
-        println!("Took {:.6} s", duration.as_secs_f64());
-        total_duration += duration.as_secs_f64();
-    }
+    println!("Part 1 answer: {}", answer);
+    println!("Took {:.6} s", duration.as_secs_f64());
 
-    let mut total_duration2 = 0.0;
-    for _ in 0..100 {
-        let start_time = std::time::Instant::now();
-        let answer = part_2(&input);
-        let duration = start_time.elapsed();
+    let start_time = std::time::Instant::now();
+    let answer = part_2_less_naiive(&input);
+    let duration = start_time.elapsed();
 
-        println!("Part 2 answer: {}", answer);
-        println!("Took {:.6} s", duration.as_secs_f64());
-        total_duration2 += duration.as_secs_f64();
-    }
-
-    println!("Part 1 Average: {:.6} s", total_duration / 100.0);
-    println!("Part 2 Average: {:.6} s", total_duration2 / 100.0);
+    println!("Part 2 answer: {}", answer);
+    println!("Took {:.6} s", duration.as_secs_f64());
 }
