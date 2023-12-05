@@ -18,10 +18,10 @@ pub fn part1(input: &str) -> u64 {
     // I cheat and assume the maps are in order :)
     while input_lines.by_ref().any(|v| v.contains("map")) {
         for line in input_lines.by_ref().take_while(|v| !v.is_empty()) {
-            let parts = line.split_whitespace().map(|v| v.parse::<u64>().unwrap()).collect::<Vec<_>>();
-            let source = parts[1];
-            let target = parts[0];
-            let len = parts[2];
+            let mut parts = line.split_whitespace().map(|v| v.parse::<u64>().unwrap());
+            let target = parts.next().unwrap();
+            let source = parts.next().unwrap();
+            let len = parts.next().unwrap();
 
             for (state, seed) in initial_seeds.iter_mut() {
                 if !matches!(state, SeedState::Mapped) && source <= *seed && *seed < source + len {
@@ -56,10 +56,10 @@ pub fn part2(input: &str) -> u64 {
     let mut target_seeds = Vec::new();
     while input_lines.by_ref().any(|v| v.contains("map")) {
         for line in input_lines.by_ref().take_while(|v| !v.is_empty()) {
-            let parts = line.split_whitespace().map(|v| v.parse::<u64>().unwrap()).collect::<Vec<_>>();
-            let source_a = parts[1];
-            let target_a = parts[0];
-            let len = parts[2];
+            let mut parts = line.split_whitespace().map(|v| v.parse::<u64>().unwrap());
+            let target_a = parts.next().unwrap();
+            let source_a = parts.next().unwrap();
+            let len = parts.next().unwrap();
             let source_b = source_a + len - 1;
             let target_b = target_a + len - 1;
 
