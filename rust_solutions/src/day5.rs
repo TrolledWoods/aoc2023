@@ -3,7 +3,7 @@ use rayon::prelude::*;
 pub fn part2_brute(input: &str) -> u64 {
     let mut input_lines = input.lines().map(|v| v.trim());
 
-    let mut initial_seeds = input_lines
+    let initial_seeds = input_lines
         .by_ref()
         .find_map(|v| v.strip_prefix("seeds: "))
         .unwrap()
@@ -48,18 +48,13 @@ pub fn part2_brute(input: &str) -> u64 {
         .flat_map(|&[a, b]| (a..a+b))
         .map(|mut seed| {
             for &map in &maps {
-                match map.binary_search_by_key(&seed, |v| v.source) {
-                    Ok(idx) => {
-                        if seed < map[idx].end {
-                            seed = seed - map[idx].source + map[idx].target;
-                        }
-                    }
-                    Err(idx) => {
-                        let idx = idx - 1;
-                        if seed < map[idx].end {
-                            seed = seed - map[idx].source + map[idx].target;
-                        }
-                    }
+                let idx = match map.binary_search_by_key(&seed, |v| v.source) {
+                    Ok(idx) => idx,
+                    Err(idx) => idx - 1,
+                };
+
+                if seed < map[idx].end {
+                    seed = seed - map[idx].source + map[idx].target;
                 }
             }
 
@@ -132,28 +127,29 @@ pub fn part2(input: &str) -> u64 {
             let source_a = parts.next().unwrap();
             let len = parts.next().unwrap();
             let source_b = source_a + len - 1;
-            let target_b = target_a + len - 1;
 
             for idx in 0..initial_seeds.len() {
                 let seed = &mut initial_seeds[idx];
                 let [seed_a, seed_b] = *seed;
-                if seed_b < seed_a {
-                    // Don't do anything, this seed is invalid (or was removed or something)!
-                } else if seed_b < source_a || seed_a > source_b {
-                    *seed = [seed_a, seed_b];
-                } else if seed_a < source_a && seed_b <= source_b {
-                    *seed = [seed_a, source_a - 1];
-                    target_seeds.push([target_a, seed_b - source_a + target_a]);
-                } else if seed_a >= source_a && seed_b > source_b {
-                    *seed = [source_b + 1, seed_b];
-                    target_seeds.push([seed_a - source_a + target_a, target_b]);
-                } else if seed_a < source_a && seed_b > source_b {
-                    target_seeds.push([target_a, target_b]);
-                    *seed = [source_b + 1, seed_b];
-                    initial_seeds.push([seed_a, source_a - 1]);
-                } else {
+
+                // Compute the range of overlap between the seed range and the map source range
+                let a = seed_a.max(source_a);
+                let b = seed_b.min(source_b);
+
+                // Is the overlapping non-empty?
+                if a <= b {
+                    // Map the overlapping range
+                    target_seeds.push([a - source_a + target_a, b - source_a + target_a]);
+
                     *seed = [u64::MAX, 0];
-                    target_seeds.push([seed_a - source_a + target_a, seed_b - source_a + target_a]);
+                    // Add the remaining left and right ranges back to the un-mapped seeds list, if
+                    // they're non-empty.
+                    if seed_a < a {
+                        initial_seeds.push([seed_a, a - 1]);
+                    }
+                    if b < seed_b {
+                        initial_seeds.push([b + 1, seed_b]);
+                    }
                 }
             }
 
