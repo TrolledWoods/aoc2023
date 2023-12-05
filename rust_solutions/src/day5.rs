@@ -130,18 +130,13 @@ pub fn part2(input: &str) -> u64 {
             let source = source_start .. source_start + len;
 
             for seed in seeds.drain(..) {
-                // Compute the range of overlap between the seed range and the map source range
                 let overlap = seed.start.max(source.start) .. seed.end.min(source.end);
 
-                // Is the overlapping non-empty?
                 if overlap.is_empty() {
                     unmapped_seeds.push(seed);
                 } else {
-                    // Map the overlapping range to the target seed positions
                     mapped_seeds.push(overlap.start - source.start + target .. overlap.end - source.start + target);
 
-                    // Add the remaining left and right ranges back to the unmapped seeds list, if
-                    // they're non-empty.
                     let left = seed.start .. overlap.start;
                     if !left.is_empty() {
                         unmapped_seeds.push(left);
