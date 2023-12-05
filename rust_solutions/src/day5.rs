@@ -12,32 +12,55 @@ pub fn part2_brute(input: &str) -> u64 {
         .array_chunks()
         .collect::<Vec<_>>();
 
+    struct MapEntry {
+        target: u64,
+        source: u64,
+        end: u64,
+    }
+
     let mut maps = Vec::new();
+    let mut ranges = Vec::new();
     // I cheat and assume the maps are in order :)
     while input_lines.by_ref().any(|v| v.contains("map")) {
-        let mut ranges = Vec::new();
+        let start = ranges.len();
+        let mut has_zero_map = false;
         for line in input_lines.by_ref().take_while(|v| !v.is_empty()) {
             let mut parts = line.split_whitespace().map(|v| v.parse::<u64>().unwrap());
             let target = parts.next().unwrap();
             let source = parts.next().unwrap();
             let len = parts.next().unwrap();
-            ranges.push((target, source, len));
+            if source == 0 {
+                has_zero_map = true;
+            }
+            ranges.push(MapEntry { target, source, end: source + len });
         }
-        maps.extend(ranges.iter().zip((0..ranges.len()).rev()).map(|(&range, i)| (i, range)));
+        if !has_zero_map {
+            ranges.push(MapEntry { target: 0, source: 0, end: 0 });
+        }
+        ranges[start..].sort_by_key(|e| e.source);
+        maps.push(start..ranges.len());
     }
+
+    let maps = maps.into_iter().map(|range| &ranges[range.start .. range.end]).collect::<Vec<_>>();
 
     initial_seeds
         .par_iter()
-        .flat_map(|&[a, b]| a..a+b)
+        .flat_map(|&[a, b]| (a..a+b))
         .map(|mut seed| {
-            let mut i = 0;
-            while i < maps.len() {
-                let (offset, (target, start, len)) = maps[i];
-                if seed >= start && seed < start + len {
-                    seed = seed - start + target;
-                    i += offset;
+            for &map in &maps {
+                match map.binary_search_by_key(&seed, |v| v.source) {
+                    Ok(idx) => {
+                        if seed < map[idx].end {
+                            seed = seed - map[idx].source + map[idx].target;
+                        }
+                    }
+                    Err(idx) => {
+                        let idx = idx - 1;
+                        if seed < map[idx].end {
+                            seed = seed - map[idx].source + map[idx].target;
+                        }
+                    }
                 }
-                i += 1;
             }
 
             seed
