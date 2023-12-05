@@ -108,58 +108,61 @@ pub fn part1(input: &str) -> u64 {
 pub fn part2(input: &str) -> u64 {
     let mut input_lines = input.lines().map(|v| v.trim());
 
-    let mut initial_seeds = input_lines
+    let mut seeds = input_lines
         .by_ref()
         .find_map(|v| v.strip_prefix("seeds: "))
         .unwrap()
         .split_whitespace()
         .map(|v| v.parse::<u64>().unwrap())
         .array_chunks()
-        .map(|[a, b]| [a, a + b - 1])
+        .map(|[start, len]| start .. start + len)
         .collect::<Vec<_>>();
 
     // I cheat and assume the maps are in order :)
-    let mut target_seeds = Vec::new();
+    let mut mapped_seeds = Vec::new();
+    let mut unmapped_seeds = Vec::new();
     while input_lines.by_ref().any(|v| v.contains("map")) {
         for line in input_lines.by_ref().take_while(|v| !v.is_empty()) {
             let mut parts = line.split_whitespace().map(|v| v.parse::<u64>().unwrap());
-            let target_a = parts.next().unwrap();
-            let source_a = parts.next().unwrap();
+            let target = parts.next().unwrap();
+            let source_start = parts.next().unwrap();
             let len = parts.next().unwrap();
-            let source_b = source_a + len - 1;
+            let source = source_start .. source_start + len;
 
-            for idx in 0..initial_seeds.len() {
-                let seed = &mut initial_seeds[idx];
-                let [seed_a, seed_b] = *seed;
-
+            for seed in seeds.drain(..) {
                 // Compute the range of overlap between the seed range and the map source range
-                let a = seed_a.max(source_a);
-                let b = seed_b.min(source_b);
+                let overlap = seed.start.max(source.start) .. seed.end.min(source.end);
 
                 // Is the overlapping non-empty?
-                if a <= b {
-                    // Map the overlapping range
-                    target_seeds.push([a - source_a + target_a, b - source_a + target_a]);
+                if overlap.is_empty() {
+                    unmapped_seeds.push(seed);
+                } else {
+                    // Map the overlapping range to the target seed positions
+                    mapped_seeds.push(overlap.start - source.start + target .. overlap.end - source.start + target);
 
-                    *seed = [u64::MAX, 0];
-                    // Add the remaining left and right ranges back to the un-mapped seeds list, if
+                    // Add the remaining left and right ranges back to the unmapped seeds list, if
                     // they're non-empty.
-                    if seed_a < a {
-                        initial_seeds.push([seed_a, a - 1]);
+                    let left = seed.start .. overlap.start;
+                    if !left.is_empty() {
+                        unmapped_seeds.push(left);
                     }
-                    if b < seed_b {
-                        initial_seeds.push([b + 1, seed_b]);
+
+                    let right = overlap.end .. seed.end;
+                    if !right.is_empty() {
+                        unmapped_seeds.push(right);
                     }
                 }
             }
 
-            initial_seeds.retain(|[a, b]| b >= a);
+            // The remaining seed ranges that are not yet mapped by this mapper should
+            // be swapped back in to be mapped with the next one
+            std::mem::swap(&mut unmapped_seeds, &mut seeds);
         }
 
-        initial_seeds.extend(target_seeds.drain(..));
+        seeds.extend(mapped_seeds.drain(..));
     }
 
-    initial_seeds.into_iter().map(|[a, _]| a).min().unwrap()
+    seeds.iter().map(|seed| seed.start).min().unwrap()
 }
 
 #[test]
