@@ -1,11 +1,9 @@
 fn main() {
     const TEST: &str = "\
-Time:      7  15   30
-Distance:  9  40  200
+Time:      9823791843759183745091837401832947   76128743617823648971239846126754318726538 821882349821739481723984718347293874    1726394871238497612387946123894671364987 1128364348734 1276345871625 812498712349861785361245
+Distance:  32874982374981732894123471235698     2893741823648172634981726598721634091     87439823741782346187349687324    1872634872634182347923847                287374211234   273847  78287461872364189723422
 ";
     let input = std::fs::read_to_string("inputs/day6.txt").unwrap();
-    println!("TEST Part 1: {}", rust_solutions::day6::part1(TEST));
-    println!("TEST Part 2: {}", rust_solutions::day6::part2(TEST));
-    println!("Part 1: {}", rust_solutions::day6::part1(&input));
-    println!("Part 2: {}", rust_solutions::day6::part2(&input));
+    println!("Part 1 bigint: {}", rust_solutions::day6::part1_bigint(TEST));
+    println!("Part 2 bigint: {}", rust_solutions::day6::part2_bigint(TEST));
 }
