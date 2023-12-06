@@ -1,6 +1,7 @@
 #![feature(iter_array_chunks)]
 #![feature(array_windows)]
 #![feature(char_indices_offset)]
+#![feature(isqrt)]
 
 // pub mod parse;
 

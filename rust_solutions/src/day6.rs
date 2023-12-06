@@ -8,17 +8,20 @@ pub fn part1(input: &str) -> u64 {
         // Simple brute way
         // let ways = (0..time).map(|input| input * (time - input)).filter(|&d| d > distance).count();
         // prod *= ways as u64;
+        prod *= match time.pow(2).checked_sub(4 * distance) {
+            Some(v) => {
+                let mut s = v.isqrt();
+                if s.pow(2) == v {
+                    s -= 1;
+                }
 
-        let inner_sqrt = (time as f64).powi(2) - 4.0 * distance as f64;
-        if inner_sqrt >= 0.0 {
-            // The weird floor + 1 and ceil - 1 is because our answer requires the distance to be > record, not >= record. So if we find an exact solution
-            // for zero, we still need to get the number above/below it!
-            let lower = (((time as f64 - f64::sqrt(inner_sqrt)) / 2.0).floor() + 1.0).max(0.0) as u64;
-            let upper = (((time as f64 + f64::sqrt(inner_sqrt)) / 2.0).ceil() - 1.0).min(time as f64) as u64;
-            prod *= upper - lower + 1;
-        } else {
-            prod *= 0;
-        }
+                let lower = (time.saturating_sub(s) + 1) / 2;
+                let upper = (time + s) / 2;
+
+                upper - lower + 1
+            }
+            None => 0,
+        };
     }
     prod
 }
@@ -28,15 +31,19 @@ pub fn part2(input: &str) -> u64 {
     let time = lines.by_ref().find_map(|l| l.strip_prefix("Time:")).unwrap().split_whitespace().collect::<String>().parse::<u64>().unwrap();
     let distance = lines.by_ref().find_map(|l| l.strip_prefix("Distance:")).unwrap().split_whitespace().collect::<String>().parse::<u64>().unwrap();
 
-    let inner_sqrt = (time as f64).powi(2) - 4.0 * distance as f64;
-    if inner_sqrt >= 0.0 {
-        // The weird floor + 1 and ceil - 1 is because our answer requires the distance to be > record, not >= record. So if we find an exact solution
-        // for zero, we still need to get the number above/below it!
-        let lower = (((time as f64 - f64::sqrt(inner_sqrt)) / 2.0).floor() + 1.0).max(0.0) as u64;
-        let upper = (((time as f64 + f64::sqrt(inner_sqrt)) / 2.0).ceil() - 1.0).min(time as f64) as u64;
-        upper - lower + 1
-    } else {
-        0
+    match time.pow(2).checked_sub(4 * distance) {
+        Some(v) => {
+            let mut s = v.isqrt();
+            if s.pow(2) == v {
+                s -= 1;
+            }
+
+            let lower = (time.saturating_sub(s) + 1) / 2;
+            let upper = (time + s) / 2;
+
+            upper - lower + 1
+        }
+        None => 0,
     }
 }
 
