@@ -3,6 +3,9 @@ use num_bigint::BigUint;
 use num_traits::{Num, Pow};
 use num_integer::Roots;
 
+#[cfg(test)]
+use std::fmt::Display;
+
 pub fn part1_bigint(input: &str) -> BigUint {
     part1::<BigUint>(input)
 }
@@ -57,15 +60,15 @@ fn get_optimum_range<T: Clone + Num + Ord + Roots + Pow<u32, Output = T> + From<
 
 #[test]
 fn test_optimum_ranges() {
-    fn test_single_range<T: Clone + Num + Ord + Roots + Pow<u32, Output = T> + From<u32>>(time: T, distance: T) {
+    fn test_single_range<T: Display + Clone + Num + Ord + Roots + Pow<u32, Output = T> + From<u32>>(time: T, distance: T) {
         let wins = |button_time: T| button_time.clone() * (time.clone() - button_time) > distance.clone();
         let optimum = get_optimum_range(time.clone(), distance.clone());
 
         if !optimum.is_empty() {
             assert!(wins(optimum.start.clone()));
-            assert!(!wins(optimum.start - T::from(1)));
+            assert!(!wins(optimum.start.clone() - T::from(1)));
             assert!(wins(optimum.end.clone() - T::from(1)));
-            assert!(!wins(optimum.end));
+            assert!(!wins(optimum.end.clone()));
         } else {
             assert!(optimum.start.clone() * (time - optimum.start) <= distance);
         }
@@ -83,11 +86,35 @@ fn test_optimum_ranges() {
             test_single_range(time, distance);
         }
     }
+
+    const TEST: &str = "\
+Time:      9823791843759183745091837401832947   76128743617823648971239846126754318726538 821882349821739481723984718347293874    1726394871238497612387946123894671364987 1128364348734 1276345871625 812498712349861785361245
+Distance:  32874982374981732894123471235698     2893741823648172634981726598721634091     87439823741782346187349687324           1872634872634182347923847                287374211234  273847        78287461872364189723422
+";
+    let input = TEST;
+
+    {
+        let mut lines = input.lines().map(|v| v.trim());
+        let times = lines.by_ref().find_map(|l| l.strip_prefix("Time:")).unwrap().split_whitespace().map(|v| v.parse::<BigUint>().unwrap()).collect::<Vec<_>>();
+        let distances = lines.by_ref().find_map(|l| l.strip_prefix("Distance:")).unwrap().split_whitespace().map(|v| v.parse::<BigUint>().unwrap()).collect::<Vec<_>>();
+
+        for (time, distance) in times.into_iter().zip(distances) {
+            // let range = get_optimum_range(time, distance);
+            test_single_range(time, distance);
+        }
+    }
+
+    {
+        let mut lines = input.lines().map(|v| v.trim());
+        let time = lines.by_ref().find_map(|l| l.strip_prefix("Time:")).unwrap().split_whitespace().collect::<String>().parse::<BigUint>().unwrap();
+        let distance = lines.by_ref().find_map(|l| l.strip_prefix("Distance:")).unwrap().split_whitespace().collect::<String>().parse::<BigUint>().unwrap();
+        test_single_range(time, distance);
+    }
 }
 
 #[test]
 fn test_answers() {
     let input = std::fs::read_to_string("inputs/day6.txt").unwrap();
-    assert_eq!(part1(&input), 4568778);
-    assert_eq!(part2(&input), 28973936);
+    assert_eq!(part1::<u64>(&input), 4568778);
+    assert_eq!(part2::<u64>(&input), 28973936);
 }
